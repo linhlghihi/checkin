@@ -47,6 +47,7 @@ export function Dashboard({ api, account }: { api: Api; account: Account }) {
   }, [from, to]);
 
   const me = members.find((member) => member.id === account.id);
+  const isAdmin = account.role === 'admin';
   const selected = history.find((member) => member.id === selectedMemberId) ?? history.find((member) => member.id === account.id) ?? history[0];
   const live = useMemo(() => me?.openSince ? Math.max(0, tick - Date.parse(me.openSince)) : 0, [me?.openSince, tick]);
   const toggle = async () => {
@@ -71,7 +72,7 @@ export function Dashboard({ api, account }: { api: Api; account: Account }) {
       <div className="charts-grid"><BarChart days={selected?.days ?? []}/><LineChart days={selected?.days ?? []}/></div>
     </section>
 
-    <section className="panel"><div className="panel-heading"><div><p className="eyebrow">Toàn đội</p><h3>Bảng đối chiếu tích lũy</h3></div><button className="icon-button" onClick={() => void Promise.all([loadDashboard(), loadHistory()])} aria-label="Làm mới"><RefreshCw size={18}/></button></div><div className="table-wrap"><table><thead><tr><th>#</th><th>Thành viên</th><th>Trạng thái</th><th className="text-right">Tổng thời gian</th></tr></thead><tbody>{members.map((member, index) => <tr key={member.id}><td className="rank">{String(index + 1).padStart(2, '0')}</td><td><div className="member-cell"><span className="avatar">{initials(member.name)}</span><span>{member.name}{member.id === account.id && <small>Bạn</small>}</span></div></td><td><span className={`status ${member.isOnline ? 'online' : ''}`}><i/>{member.isOnline ? 'Online' : 'Offline'}</span></td><td className="text-right tabular-nums font-medium">{formatDuration(member.completedMilliseconds)}</td></tr>)}</tbody></table></div></section>
+    <section className="panel"><div className="panel-heading"><div><p className="eyebrow">Toàn đội</p><h3>Bảng đối chiếu tích lũy</h3></div><button className="icon-button" onClick={() => void Promise.all([loadDashboard(), loadHistory()])} aria-label="Làm mới"><RefreshCw size={18}/></button></div><div className="table-wrap"><table><thead><tr><th>#</th><th>Thành viên</th><th>Trạng thái</th>{isAdmin && <><th className="text-right">Tháng này</th><th className="text-right">Tháng trước</th></>}<th className="text-right">Tổng thời gian</th></tr></thead><tbody>{members.map((member, index) => <tr key={member.id}><td className="rank">{String(index + 1).padStart(2, '0')}</td><td><div className="member-cell"><span className="avatar">{initials(member.name)}</span><span>{member.name}{member.id === account.id && <small>Bạn</small>}</span></div></td><td><span className={`status ${member.isOnline ? 'online' : ''}`}><i/>{member.isOnline ? 'Online' : 'Offline'}</span></td>{isAdmin && <><td className="text-right tabular-nums">{formatDuration(member.monthMilliseconds)}</td><td className="text-right tabular-nums">{formatDuration(member.previousMonthMilliseconds)}</td></>}<td className="text-right tabular-nums font-medium">{formatDuration(member.completedMilliseconds)}</td></tr>)}</tbody></table></div></section>
   </div>;
 }
 

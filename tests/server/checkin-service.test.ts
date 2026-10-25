@@ -163,6 +163,7 @@ describe('CheckinService', () => {
     const row = dashboard.members.find((item) => item.id === member.account.id);
     expect(row).toMatchObject({
       monthMilliseconds: 43_200_000,
+      previousMonthMilliseconds: 7_200_000,
       isOnline: true,
     });
   });

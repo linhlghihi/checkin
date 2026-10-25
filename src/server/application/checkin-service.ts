@@ -397,11 +397,13 @@ export class CheckinService {
     });
   }
 
-  async dashboard(_actor: Actor, now = new Date()): Promise<{ now: string; members: Array<{ id: string; name: string; completedMilliseconds: number; monthMilliseconds: number; isOnline: boolean; openSince: string | null }> }> {
+  async dashboard(_actor: Actor, now = new Date()): Promise<{ now: string; members: Array<{ id: string; name: string; completedMilliseconds: number; monthMilliseconds: number; previousMonthMilliseconds: number; isOnline: boolean; openSince: string | null }> }> {
     const key = this.vault.requireKey();
     const state = await this.requireDocument();
     const monthStart = `${vietnamDate(now).slice(0, 7)}-01`;
     const monthDates = vietnamDateRange(monthStart, vietnamDate(now));
+    const previousMonthEnd = vietnamDate(new Date(Date.parse(`${monthStart}T00:00:00+07:00`) - 1));
+    const previousMonthDates = vietnamDateRange(`${previousMonthEnd.slice(0, 7)}-01`, previousMonthEnd);
     const members = state.accounts.filter((account) => account.active).map((account) => {
       assertAccountIntegrity(key, account);
       const projection = attendanceProjection(state, key, account.id);
@@ -410,6 +412,8 @@ export class CheckinService {
         name: decryptProfile(key, account).name,
         completedMilliseconds: projection.completedMilliseconds,
         monthMilliseconds: attendanceDays(state, key, account.id, monthDates, now)
+          .reduce((total, day) => total + day.durationMilliseconds, 0),
+        previousMonthMilliseconds: attendanceDays(state, key, account.id, previousMonthDates, now)
           .reduce((total, day) => total + day.durationMilliseconds, 0),
         isOnline: projection.openSession !== null,
         openSince: projection.openSession?.effectiveStartAt ?? null,

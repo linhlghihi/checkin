@@ -15,8 +15,8 @@ describe('Dashboard attendance charts', () => {
       dashboard: async () => ({
         now: '2026-09-24T03:00:00.000Z',
         members: [
-          { id: 'me', name: 'Nguyễn An', completedMilliseconds: 10_800_000, monthMilliseconds: 7_200_000, isOnline: false, openSince: null },
-          { id: 'other', name: 'Trần Bình', completedMilliseconds: 7_200_000, monthMilliseconds: 7_200_000, isOnline: false, openSince: null },
+          { id: 'me', name: 'Nguyễn An', completedMilliseconds: 10_800_000, monthMilliseconds: 7_200_000, previousMonthMilliseconds: 3_600_000, isOnline: false, openSince: null },
+          { id: 'other', name: 'Trần Bình', completedMilliseconds: 7_200_000, monthMilliseconds: 7_200_000, previousMonthMilliseconds: 1_800_000, isOnline: false, openSince: null },
         ],
       }),
       attendanceHistory: async (from: string, to: string) => {
@@ -36,12 +36,14 @@ describe('Dashboard attendance charts', () => {
       },
     } as unknown as Api;
 
-    render(<Dashboard api={api} account={{ id: 'me', name: 'Nguyễn An', role: 'member' }} />);
+    render(<Dashboard api={api} account={{ id: 'me', name: 'Nguyễn An', role: 'admin' }} />);
 
     expect(await screen.findByRole('heading', { name: 'Thời gian online theo ngày' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Xu hướng online' })).toBeInTheDocument();
     expect(screen.getByText('Tổng online tháng này')).toBeInTheDocument();
-    expect(screen.getAllByText('2 giờ 0 phút')).toHaveLength(2);
+    expect(screen.getByRole('columnheader', { name: 'Tháng này' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Tháng trước' })).toBeInTheDocument();
+    expect(screen.getAllByText('2 giờ 0 phút')).toHaveLength(4);
     expect(historyCalls[0]).toEqual(['2026-09-22', '2026-09-24']);
 
     fireEvent.mouseEnter(screen.getAllByLabelText('23/09/2026: 2 giờ 0 phút')[0]);
