@@ -1,6 +1,6 @@
 export type Role = 'admin' | 'member';
 export interface Account { id: string; name: string; role: Role; active?: boolean; createdAt?: string; telegramLinked?: boolean; telegramUsername?: string | null }
-export interface DashboardMember { id: string; name: string; completedMilliseconds: number; isOnline: boolean; openSince: string | null }
+export interface DashboardMember { id: string; name: string; completedMilliseconds: number; monthMilliseconds: number; isOnline: boolean; openSince: string | null }
 export interface AttendanceHistoryDay { date: string; durationMilliseconds: number; sessionCount: number; adjustmentMilliseconds: number }
 export interface AttendanceHistoryMember { id: string; name: string; days: AttendanceHistoryDay[] }
 export interface AuditEntry { id: string; type: string; accountId: string; actorId: string; createdAt: string; payload: Record<string, unknown> }

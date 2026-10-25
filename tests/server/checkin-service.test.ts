@@ -146,6 +146,27 @@ describe('CheckinService', () => {
     ]);
   });
 
+  it('includes completed, adjusted, and active attendance in the current Vietnam month total', async () => {
+    const admin = await service.setup('Admin');
+    const actor = await service.authenticate(admin.token);
+    const member = await service.createAccount(actor, 'Nguyễn An');
+    const memberActor = await service.authenticate((await service.login(member.key)).token);
+
+    await service.checkIn(memberActor, new Date('2026-09-30T15:00:00.000Z'));
+    await service.checkOut(memberActor, new Date('2026-10-01T02:00:00.000Z'));
+    await service.checkIn(memberActor, new Date('2026-10-05T01:00:00.000Z'));
+    await service.checkOut(memberActor, new Date('2026-10-05T03:00:00.000Z'));
+    await service.adjustAttendance(actor, member.account.id, 1_800_000, 'Bổ sung họp', new Date('2026-10-05T04:00:00.000Z'));
+    await service.checkIn(memberActor, new Date('2026-10-31T15:30:00.000Z'));
+
+    const dashboard = await service.dashboard(actor, new Date('2026-10-31T16:00:00.000Z'));
+    const row = dashboard.members.find((item) => item.id === member.account.id);
+    expect(row).toMatchObject({
+      monthMilliseconds: 43_200_000,
+      isOnline: true,
+    });
+  });
+
   it('rejects invalid attendance history ranges', async () => {
     const admin = await service.setup('Admin');
     const actor = await service.authenticate(admin.token);
@@ -355,7 +376,7 @@ describe('CheckinService', () => {
     expect(failed.reply).toBe('Không thể xử lý lệnh lúc này.');
     expect((await service.dashboard(actor)).members.find((row) => row.id === member.account.id)?.isOnline).toBe(true);
     expect((await service.audit(actor)).filter((event) => event.type === 'CHECKED_OUT')).toHaveLength(0);
-    expect(await service.handleTelegramUpdate({ updateId: 22, userId: '42', username: null, text: '/out' })).toEqual({ processed: false, reply: null });
+    expect(await service.handleTelegramUpdate({ updateId: 22, userId: '42', username: null, text: '/out', now: new Date('2026-09-20T01:01:00.000Z') })).toEqual({ processed: false, reply: null });
   });
 
   it('accepts a lower Telegram update ID after a week of inactivity', async () => {
